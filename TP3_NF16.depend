@@ -1,0 +1,19 @@
+# depslib dependency file v1.0
+1602530658 source:c:\users\phili\onedrive\documents\nf16\tp3_nf16\src\main.c
+	<stdio.h>
+	"../include/TP3.h"
+
+1602696120 c:\users\phili\onedrive\documents\nf16\tp3_nf16\include\tp3.h
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<string.h>
+	<stdbool.h>
+
+1603351963 source:c:\users\phili\onedrive\documents\nf16\tp3_nf16\src\tp3.c
+	"../include/TP3.h"
+
+1603091465 source:c:\users\phili\onedrive\documents\nf16\tp3_nf16\main.c
+	<stdio.h>
+	<stdlib.h>
+
