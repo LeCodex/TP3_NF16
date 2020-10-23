@@ -188,36 +188,35 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
  */
 void ordonnancer(T_Ordonnancement* solution){
     //return provided_ordonnancer(solution);
+    
+
     T_Patient* p=(T_Patient*)malloc(sizeof(T_Patient));
     p=solution->listePatients;
+    if( p != NULL && p->suivant != NULL )
+    {  
+        int tabTempsAttente[1000], index=0;
     
-    int tabTempsAttente[1000], index=0;
-    
-    while(p!=NULL)
-    {
         T_RendezVous* rdv=(T_RendezVous*)malloc(sizeof(T_RendezVous));
-        rdv=p->listeRendezVous;
-        while(rdv!=NULL)
+        while(p!=NULL)
         {
-            tabTempsAttente[index]+=
-        }
-    }
-    p=solution->listePatients;
-    
-    /*
-    i = 0; // variable Index de la boucle
-    d = 0 ; // variable de décalage Index de boucle 
-    tmp = 0;
-    for(d=0; d < tailleTableau; d++)
-        for(i=d; i < tailleTableau; i++)
-
-            if (tableau [i]>= tableau [d])
+            rdv=p->listeRendezVous;
+            while(rdv!=NULL)
             {
-            tmp = tableau [d];
-            tableau [d]= tableau [i];
-            tableau [i] = tmp;
+                tabTempsAttente[index]+=fin_souhaitee-debut_souhaitee;
+                rdv=rdv->suivant;
             }
-
+            p=p->suivant;
+            index++;
+        }
+        p=solution->listePatients;
+        
+        
+        
+        
+        
+        
+        
+    }
     */
     
     
