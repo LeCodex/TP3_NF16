@@ -22,7 +22,11 @@ T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, ch
     s->prenom = (char*)malloc(sizeof(char)*(strlen(prenom)+1));
     strcopy(s->nom, nom);
     strcopy(s->prenom, prenom);
-    s->listeIntervalle = NULL;
+    
+    T_Intervalle intervalleDefaut={0,32767};
+    T_Intervalle *listeIntervalle=(T_Intervalle*)malloc(sizeof(T_Intervalle));
+    listeIntervalle=&intervalleDefaut;
+    s->listeIntervalle = listeIntervalle;
 
     s->suivant = listeSoigneurs;
     return s;
@@ -183,7 +187,44 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
  * @param solution un instance
  */
 void ordonnancer(T_Ordonnancement* solution){
-    return provided_ordonnancer(solution);
+    //return provided_ordonnancer(solution);
+    T_Patient* p=(T_Patient*)malloc(sizeof(T_Patient));
+    p=solution->listePatients;
+    
+    int tabTempsAttente[1000], index=0;
+    
+    while(p!=NULL)
+    {
+        T_RendezVous* rdv=(T_RendezVous*)malloc(sizeof(T_RendezVous));
+        rdv=p->listeRendezVous;
+        while(rdv!=NULL)
+        {
+            tabTempsAttente[index]+=
+        }
+    }
+    p=solution->listePatients;
+    
+    /*
+    i = 0; // variable Index de la boucle
+    d = 0 ; // variable de décalage Index de boucle 
+    tmp = 0;
+    for(d=0; d < tailleTableau; d++)
+        for(i=d; i < tailleTableau; i++)
+
+            if (tableau [i]>= tableau [d])
+            {
+            tmp = tableau [d];
+            tableau [d]= tableau [i];
+            tableau [i] = tmp;
+            }
+
+    */
+    
+    
+    
+    
+    
+    
 }
 /**
  * @brief Exporter la solution d’un ordonnancement.
