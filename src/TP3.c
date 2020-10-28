@@ -15,21 +15,20 @@ Date: 12/10/2020
  * @param prenom le prénom d'un soigneur.
  */
 T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, char* nom, char* prenom){
-    //return provided_ajouterSoigneur(listeSoigneurs, idSoi, nom, prenom);
-    T_Soigneur* s = (T_Soigneur*)malloc(sizeof(T_Soigneur));
-    s->id_soi = idSoi;
-    s->nom = (char*)malloc(sizeof(char)*(strlen(nom)+1));
-    s->prenom = (char*)malloc(sizeof(char)*(strlen(prenom)+1));
-    strcopy(s->nom, nom);
-    strcopy(s->prenom, prenom);
-    
+    T_Soigneur *nouvSoigneur=malloc(sizeof(T_Soigneur*));
     T_Intervalle intervalleDefaut={0,32767};
-    T_Intervalle *listeIntervalle=(T_Intervalle*)malloc(sizeof(T_Intervalle));
+    T_Intervalle *listeIntervalle=malloc(sizeof(T_Intervalle*));
     listeIntervalle=&intervalleDefaut;
-    s->listeIntervalle = listeIntervalle;
 
-    s->suivant = listeSoigneurs;
-    return s;
+    nouvSoigneur->id_soi=idSoi;
+    nouvSoigneur->nom=nom;
+    nouvSoigneur->prenom=prenom;
+    nouvSoigneur->listeIntervalle=listeIntervalle;
+
+    nouvSoigneur->suivant=listeSoigneurs;
+    return  nouvSoigneur;
+
+    //return provided_ajouterSoigneur(listeSoigneurs, idSoi, nom, prenom);
 }
 /**
  * @brief Ajout d'un patient, où la liste de rendez-vous médicaux pour un nouveau patient est initialement vide.
@@ -39,17 +38,16 @@ T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, ch
  * @param prenom le prénom d'un patient.
  */
 T_Patient* ajouterPatient(T_Patient* listePatients, Index_Patient idPat, char* nom, char* prenom){
-    //return provided_ajouterPatient(listePatients, idPat, nom, prenom);
-    T_Patient* p = (T_Patient*)malloc(sizeof(T_Patient));
-    p->id_pat = idPat;
-    p->nom = (char*)malloc(sizeof(char)*(strlen(nom)+1));
-    p->prenom = (char*)malloc(sizeof(char)*(strlen(prenom)+1));
-    strcopy(p->nom, nom);
-    strcopy(p->prenom, prenom);
-    p->listeRendezVous = NULL;
+    T_Patient *nouvPatient=malloc(sizeof(T_Patient));
 
-    p->suivant = listePatients;
-    return p;
+    nouvPatient->id_pat=idPat;
+    nouvPatient->nom=nom;
+    nouvPatient->prenom=prenom;
+    nouvPatient->listeRendezVous = NULL;
+
+    nouvPatient->suivant=listePatients;
+    return  nouvPatient;
+    //return provided_ajouterPatient(listePatients, idPat, nom, prenom);
 }
 /**
  * @brief Ajout d’un rendez-vous médical pour un patient.
@@ -62,16 +60,16 @@ T_Patient* ajouterPatient(T_Patient* listePatients, Index_Patient idPat, char* n
  */
 T_RendezVous* ajouterRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Time dateDebutSouhaitee, Time dateFinSouhaitee, Time tempsDeplacement, char* desc){
     //return provided_ajouterRendezVous(listeRdV, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement, desc);
-    T_RendezVous* r = (T_RendezVous*)malloc(sizeof(T_RendezVous));
-    r->id_soi = idSoi;
-    r->debut_souhaitee = dateDebutSouhaitee;
-    r->fin_souhaitee = dateFinSouhaitee;
-    r->temps_deplacement = tempsDeplacement;
-    r->desc = (char*)malloc(sizeof(char)*(strlen(desc)+1));
-    strcopy(r->desc, desc);
+    T_RendezVous* nouvRendezVous=malloc(sizeof(T_RendezVous*));
 
-    r->suivant = listeRdV;
-    return r;
+    nouvRendezVous->id_soi=idSoi;
+    nouvRendezVous->debut_souhaitee=dateDebutSouhaitee;
+    nouvRendezVous->fin_souhaitee=dateFinSouhaitee;
+    nouvRendezVous->temps_deplacement=tempsDeplacement;
+    nouvRendezVous->desc=desc;
+
+    nouvRendezVous->suivant=listeRdV;
+     return  nouvRendezVous;
 }
 /**
  * @brief Modification d’ un rendez-vous médical pour un patient par une date, le temps de déplacement ou une description nouvelle :
@@ -84,22 +82,22 @@ T_RendezVous* ajouterRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Ti
  */
 void modifierRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Time dateDebutSouhaitee, Time dateFinSouhaitee, Time tempsDeplacement, char* desc){
     //return provided_modifierRendezVous(listeRdV, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement, desc);
-    T_RendezVous* r = listeRdv;
+    T_RendezVous* r = listeRdV;
     int trouve = 0;
 
-    while (r->suivant != NULL) {
+    while (trouve==0) {
         if (r->id_soi == idSoi) {
             trouve = 1;
-            break;
         }
-        r = r->suivant;
+        else r = r->suivant;
     }
-    if (!trouve) return;
+    if (trouve==0) return;
 
     r->debut_souhaitee = dateDebutSouhaitee;
     r->fin_souhaitee = dateFinSouhaitee;
     r->temps_deplacement = tempsDeplacement;
-    strcopy(r->desc, desc);
+    r->desc=desc;
+    return;
 }
 /**
  * @brief Suppression d’un rendez-vous médical pour un patient en donnant l’identifiant du soigneur correspondant.
