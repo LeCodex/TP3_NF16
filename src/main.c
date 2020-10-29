@@ -2,7 +2,7 @@
 #include "../include/TP3.h"
 
 int main() {
-    menuPrincipal();
+    //menuPrincipal();
 
     /*
     //TEST DE AJOUTERSOIGNEUR
@@ -48,7 +48,8 @@ int main() {
         ptr4=ptr4->suivant;
     }
     */
-    
-    
+
+    creerInstance("./instance1.txt");
+
     return 0;
 }

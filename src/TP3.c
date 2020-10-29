@@ -112,11 +112,11 @@ void modifierRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Time dateD
  */
 T_RendezVous* supprimerRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi){
     //return provided_supprimerRendezVous(listeRdV, idSoi);
-    T_RendezVous* r = listeRdv;
+    T_RendezVous* r = listeRdV;
     int trouve = 0;
 
     while (r->suivant != NULL) {
-        if (r->suivant->idSoi == idSoi) {
+        if (r->suivant->id_soi == idSoi) {
             trouve = 1;
             break;
         }
@@ -124,8 +124,8 @@ T_RendezVous* supprimerRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi){
         r = r->suivant;
     }
     if (trouve) {
-        T_RendezVous* aSupprimer = curr->suivant;
-        r->suivant = curr->suivant->suivant;
+        T_RendezVous* aSupprimer = r->suivant;
+        r->suivant = r->suivant->suivant;
         free(aSupprimer);
     }
 
@@ -162,7 +162,25 @@ void affichage_RendezVous(T_RendezVous *rendezVous){
  * @return un pointeur vers l’instance.
  */
 T_Ordonnancement* creerInstance(char* filename){
-    return provided_creerInstance(filename);
+    FILE* fptr;
+    T_Ordonnancement* o = malloc(sizeof(T_Ordonnancement));
+
+    if ((fptr = fopen(filename, "r")) == NULL) {
+        printf("Erreur dans l'ouverture du fichier");
+        exit(1);
+    } else {
+        char buff[255];
+        fgets(buff, 255, fptr);
+        int nbPatients = buff[0] - '0';
+        int nbSoigneurs = buff[2] - '0';
+
+        for (int i = 1; i < nbPatients; i ++) {
+
+        }
+    };
+
+    fclose(fptr);
+    return o;
 }
 
 /**
@@ -186,14 +204,14 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
  */
 void ordonnancer(T_Ordonnancement* solution){
     //return provided_ordonnancer(solution);
-    
+    /*
 
     T_Patient* p=(T_Patient*)malloc(sizeof(T_Patient));
     p=solution->listePatients;
     if( p != NULL && p->suivant != NULL )
-    {  
+    {
         int tabTempsAttente[1000], index=0;
-    
+
         T_RendezVous* rdv=(T_RendezVous*)malloc(sizeof(T_RendezVous));
         while(p!=NULL)
         {
@@ -207,21 +225,21 @@ void ordonnancer(T_Ordonnancement* solution){
             index++;
         }
         p=solution->listePatients;
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
     }
     */
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
 }
 /**
  * @brief Exporter la solution d’un ordonnancement.
