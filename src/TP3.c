@@ -69,7 +69,7 @@ T_RendezVous* ajouterRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Ti
     nouvRendezVous->desc=desc;
 
     nouvRendezVous->suivant=listeRdV;
-     return  nouvRendezVous;
+    return  nouvRendezVous;
 }
 /**
  * @brief Modification d’ un rendez-vous médical pour un patient par une date, le temps de déplacement ou une description nouvelle :
@@ -168,16 +168,40 @@ T_Ordonnancement* creerInstance(char* filename){
     if ((fptr = fopen(filename, "r")) == NULL) {
         printf("Erreur dans l'ouverture du fichier");
         exit(1);
-    } else {
-        char buff[255];
-        fgets(buff, 255, fptr);
-        int nbPatients = buff[0] - '0';
-        int nbSoigneurs = buff[2] - '0';
+    }
 
-        for (int i = 1; i < nbPatients; i ++) {
+    unsigned int nbPatients = 0, nbSoigneurs = 0;
+    fscanf(fptr, "%u", &nbPatients);
+    fscanf(fptr, "%u\n", &nbSoigneurs);
 
+    unsigned int idPat, nbRdV, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement;
+    char *nom, *prenom, *desc;
+    for (int i = 0; i < nbPatients; ++i) {
+        fscanf(fptr, "%u", &idPat);
+        fscanf(fptr, "%u", &nbRdV);
+        fscanf(fptr, "%s", nom);
+        fscanf(fptr, "%s", prenom);
+
+        o->listePatients = ajouterPatient(o->listePatients, idPat, nom, prenom);
+
+        for (int j = 0; j < nbRdV; ++j) {
+            fscanf(fptr, "%u", &idSoi);
+            fscanf(fptr, "%u", &dateDebutSouhaitee);
+            fscanf(fptr, "%u", &dateFinSouhaitee);
+            fscanf(fptr, "%u", &tempsDeplacement);
+            fscanf(fptr, "%s", desc);
+
+            o->listePatients->listeRendezVous = ajouterRendezVous(o->listePatients->listeRendezVous, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement, desc);
         }
-    };
+    }
+
+    for (int i = 0; i < nbSoigneurs; ++i) {
+        fscanf(fptr, "%u", &idSoi);
+        fscanf(fptr, "%s", nom);
+        fscanf(fptr, "%s", prenom);
+
+        o->listeSoigneurs = ajouterSoigneur(o->listeSoigneurs, idSoi, nom, prenom);
+    }
 
     fclose(fptr);
     return o;
@@ -190,8 +214,20 @@ T_Ordonnancement* creerInstance(char* filename){
  * @param soigneur un soigneur.
  */
 void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
-    return provided_affecterRdV(rdv, soigneur);
+    rdv->debut_affectee = rdv->debut_souhaitee;
+
+    T_Intervalle* intervalle = soigneur->listeIntervalle;
+    while (intervalle != NULL) {
+        if (intervalle->fin > rdv->debut_affectee) {
+            rdv->debut_affectee = intervalle->fin;
+        }
+        intervalle = intervalle->suivant;
+    }
+
+    rdv->fin_affectee = rdv->debut_affectee - rdv->debut_souhaitee + rdv->fin_souhaitee;
+    rdv->id_soi = soigneur->id_soi;
 }
+
 /**
  * @brief Ordonnancer les rendez-vous des patients en fonction des intervalles de temps disponibles
  * pour l’ensemble des soigneurs en minimisant la somme des temps d’attente des patients
