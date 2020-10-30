@@ -5,6 +5,9 @@ Institute: Heudiasyc, université de technologie de compiègne
 Date: 12/10/2020
 *****************************************************************/
 #include "../include/TP3.h"
+#include <stdlib.h>
+#include <time.h>
+#include<string.h>
 
 /**
  * @brief Ajout d’un soigneur, où la liste des intervalles de temps disponibles pour un nouveau soigneur
@@ -240,38 +243,10 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
  */
 void ordonnancer(T_Ordonnancement* solution){
     //return provided_ordonnancer(solution);
-    /*
-
-    T_Patient* p=(T_Patient*)malloc(sizeof(T_Patient));
-    p=solution->listePatients;
-    if( p != NULL && p->suivant != NULL )
-    {
-        int tabTempsAttente[1000], index=0;
-
-        T_RendezVous* rdv=(T_RendezVous*)malloc(sizeof(T_RendezVous));
-        while(p!=NULL)
-        {
-            rdv=p->listeRendezVous;
-            while(rdv!=NULL)
-            {
-                tabTempsAttente[index]+=fin_souhaitee-debut_souhaitee;
-                rdv=rdv->suivant;
-            }
-            p=p->suivant;
-            index++;
-        }
-        p=solution->listePatients;
-
-
-
-
-
-
-
-    }
-    */
-
-
+    provided_MergeSort(solution->listePatients);
+    
+    
+    
 
 
 
@@ -286,6 +261,49 @@ void ordonnancer(T_Ordonnancement* solution){
  */
 void exportSolution(T_Ordonnancement* solution, char* filename){
     //return provided_exportSolution(solution, filename);
+    T_Patient* p = malloc(sizeof(T_Patient));
+    p=solution->listePatients;
+    
+    T_RendezVous* r = malloc(sizeof(T_RendezVous));
+
+    FILE* fichier = NULL;
+    
+    char* dateCourante[256];
+    strftime(dateCourante, sizeof(buffer), "%Y-%m-%d", localtime(&timestamp)); 
+    char* nomFichier[256]="solution.txt."
+    strcat(nomFichier,dateCourante);
+    strcat(nomFichier,".txt);
+    
+    fichier = fopen(nomFichier, "w");
+
+    if (fichier != NULL)
+    {
+        unsigned int nbPatients=0, nbSoigneurs=0;
+        nbPatients=provided_compter_nb_patients(solution->listePatients);
+        nbSoigneurs=provided_compter_nb_soigneurs(solution->listeSoigneurs);
+        fprintf(fichier, "%u ",nbPatients);
+        fprintf(fichier, "%u\n",nbSoigneurs);
+        
+        for (int i = 0; i < nbPatients; ++i) {
+            fprintf(fichier, "%u %u\n", p->id_pat,provided_compter_nb_Rdv_par_patient(p->id_pat,p));
+            
+            r=p->listeRendezVous;
+            for (int j = 0; j < nbRdV; ++j) {
+                fprintf(fichier, "%u %u %u %u\n", r->idSoi,r->dateDebutSouhaitee,r->dateFinSouhaitee,r->tempsDeplacement);
+                r=r->suivant;
+            }
+            p=p->suivant;
+        }
+        fclose(fichier);
+    }
+    else
+    {
+        
+        printf("Impossible d'écrire dans le fichier %s",nomFichier);
+    }
+
+    return ;
+
 }
 
 /**
