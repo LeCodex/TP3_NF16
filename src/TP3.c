@@ -140,7 +140,22 @@ T_RendezVous* supprimerRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi){
  * @param listeSoigneurs une liste de soigneurs.
  */
 void affichage_Soigneurs(T_Soigneur* listeSoigneurs){
-    return provided_affichage_Soigneurs(listeSoigneurs);
+    //return provided_affichage_Soigneurs(listeSoigneurs);
+
+    if(listeSoigneurs==NULL) printf("Aucun soigneur\n");
+    else
+    {
+        printf("Les informations de soigneurs sont:\n");
+        T_Soigneur* s=listeSoigneurs;
+        T_Intervalle* i;
+        while(s!=NULL)
+        {
+            i=s->listeIntervalle;
+            printf("Id:%d, Nom:%s, Prenom:%s, Intervalles de temps disponible:",s->id_soi,s->nom,s->prenom);
+            printf("[%d, %d[\n",i->debut,i->fin);
+            s=s->suivant;
+        }
+    }
 }
 
 /**
@@ -148,7 +163,22 @@ void affichage_Soigneurs(T_Soigneur* listeSoigneurs){
  * @param listePatients une liste de patients.
  */
 void affichage_Patients(T_Patient* listePatients){
-    return provided_affichage_Patients(listePatients);
+    //return provided_affichage_Patients(listePatients);
+
+    if(listePatients==NULL) printf("Aucun patient\n");
+    else
+    {
+        printf("Les informations de patients sont:\n");
+        T_Patient* p=listePatients;
+        T_RendezVous* r;
+        while(p!=NULL)
+        {
+            r=p->listeRendezVous;
+            printf("Id:%d, Nom:%s, Prenom:%s, ses rdv medicaux:",p->id_pat,p->nom,p->prenom);
+            affichage_RendezVous(r);
+            p=p->suivant;
+        }
+    }
 }
 
 /**
@@ -156,7 +186,19 @@ void affichage_Patients(T_Patient* listePatients){
  * @param rendezVous un rendez-vous.
  */
 void affichage_RendezVous(T_RendezVous *rendezVous){
-    return provided_affichage_un_RendezVous(rendezVous);
+    //return provided_affichage_un_RendezVous(rendezVous);
+
+    if(rendezVous==NULL) printf("Aucun rdv\n");
+    else
+    {
+        T_RendezVous* r=rendezVous;
+        while(r!=NULL)
+        {
+            printf("%s, id_soigneur_associe: %d, temps_deplacement_depuis_rdv_precedent:%d\n",r->desc,r->id_soi,r->temps_deplacement);
+            printf("\t rdv souhaite: [%d, %d[, rdv affecte: [%d, %d[\n",r->debut_souhaitee,r->fin_souhaitee,r->debut_affectee,r->fin_affectee);
+            r=r->suivant;
+        }
+    }
 }
 
 /**
