@@ -2,7 +2,7 @@
 #include "../include/TP3.h"
 
 int main() {
-    //menuPrincipal();
+    menuPrincipal();
 
     /*
 //    TEST DE AJOUTERSOIGNEUR

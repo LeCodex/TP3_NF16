@@ -19,11 +19,14 @@ Date: 12/10/2020
  */
 T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, char* nom, char* prenom){
     T_Soigneur *nouvSoigneur=malloc(sizeof(T_Soigneur*));
-    T_Intervalle intervalleDefaut={0,32767};
     T_Intervalle *listeIntervalle=malloc(sizeof(T_Intervalle*));
-    listeIntervalle=&intervalleDefaut;
+    listeIntervalle->debut = 0;
+    listeIntervalle->fin = 32767;
+    listeIntervalle->suivant = NULL;
 
     nouvSoigneur->id_soi=idSoi;
+    nouvSoigneur->nom = malloc(sizeof(char*)*40);
+    nouvSoigneur->prenom = malloc(sizeof(char*)*40);
     strcpy(nouvSoigneur->nom, nom);
     strcpy(nouvSoigneur->prenom, prenom);
     nouvSoigneur->listeIntervalle=listeIntervalle;
@@ -41,14 +44,18 @@ T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, ch
  * @param prenom le prénom d'un patient.
  */
 T_Patient* ajouterPatient(T_Patient* listePatients, Index_Patient idPat, char* nom, char* prenom){
-    T_Patient *nouvPatient=malloc(sizeof(T_Patient));
+    T_Patient *nouvPatient=malloc(sizeof(T_Patient*));
 
     nouvPatient->id_pat=idPat;
+    nouvPatient->nom = malloc(sizeof(char*)*40);
+    nouvPatient->prenom = malloc(sizeof(char*)*40);
     strcpy(nouvPatient->nom, nom);
     strcpy(nouvPatient->prenom, prenom);
     nouvPatient->listeRendezVous = NULL;
+    printf("set");
 
     nouvPatient->suivant=listePatients;
+    printf("insert");
     return  nouvPatient;
     //return provided_ajouterPatient(listePatients, idPat, nom, prenom);
 }
@@ -68,7 +75,10 @@ T_RendezVous* ajouterRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Ti
     nouvRendezVous->id_soi=idSoi;
     nouvRendezVous->debut_souhaitee=dateDebutSouhaitee;
     nouvRendezVous->fin_souhaitee=dateFinSouhaitee;
+    nouvRendezVous->debut_affectee=0;
+    nouvRendezVous->fin_affectee=0;
     nouvRendezVous->temps_deplacement=tempsDeplacement;
+    nouvRendezVous->desc = malloc(sizeof(char*)*125);
     strcpy(nouvRendezVous->desc, desc);
 
     nouvRendezVous->suivant=listeRdV;
@@ -128,7 +138,7 @@ T_RendezVous* supprimerRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi){
     }
     if (trouve) {
         T_RendezVous* aSupprimer = r->suivant;
-        r->suivant = r->suivant->suivant;
+        r->suivant = aSupprimer->suivant;
         free(aSupprimer);
     }
 
@@ -210,10 +220,10 @@ void affichage_RendezVous(T_RendezVous *rendezVous){
  * @return un pointeur vers l’instance.
  */
 T_Ordonnancement* creerInstance(char* filename){
-    FILE* fptr;
+    FILE* fptr = fopen(filename, "r");
     T_Ordonnancement* o = malloc(sizeof(T_Ordonnancement*));
 
-    if ((fptr = fopen(filename, "r")) == NULL) {
+    if (fptr == NULL) {
         printf("Erreur dans l'ouverture du fichier");
         exit(1);
     }
@@ -224,7 +234,9 @@ T_Ordonnancement* creerInstance(char* filename){
     printf("Read patients and doctors amount: %d, %d\n\n", nbPatients, nbSoigneurs);
 
     unsigned int idPat, nbRdV, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement;
-    char nom[40], prenom[40], desc[125];
+    char* nom = malloc(sizeof(char*)*40);
+    char* prenom = malloc(sizeof(char*)*40);
+    char* desc = malloc(sizeof(char*)*125);
     printf("[Reading patients info]\n");
     for (int i = 0; i < nbPatients; ++i) {
         fscanf(fptr, "%u", &idPat);
@@ -232,8 +244,8 @@ T_Ordonnancement* creerInstance(char* filename){
         fscanf(fptr, "%s", nom);
         fscanf(fptr, "%s", prenom);
 
-        o->listePatients = ajouterPatient(o->listePatients, idPat, nom, prenom);
         printf("Read patient %d with %d appointments, named %s %s\n", idPat, nbRdV, nom, prenom);
+        o->listePatients = ajouterPatient(o->listePatients, idPat, nom, prenom);
 
         for (int j = 0; j < nbRdV; ++j) {
             fscanf(fptr, "%u", &idSoi);
@@ -275,11 +287,12 @@ T_Ordonnancement* creerInstance(char* filename){
  */
 void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
     rdv->debut_affectee = rdv->debut_souhaitee;
+    rdv->fin_affectee = rdv->fin_souhaitee;
 
     T_Intervalle* intervalle = soigneur->listeIntervalle;
     while (intervalle != NULL) {
-        if (intervalle->fin > rdv->debut_affectee) {
-            rdv->debut_affectee = intervalle->fin;
+        if (intervalle->fin > rdv->debut_affectee || intervalle->debut > rdv->fin_affectee) {
+            rdv->debut_affectee = intervalle->fin + rdv->temps_deplacement;
         }
         intervalle = intervalle->suivant;
     }
@@ -319,7 +332,7 @@ void ordonnancer(T_Ordonnancement* solution){
                 s=s->suivant;
             }
             affecterRdV(r,s);
-            
+
             r=r->suivant;
             s=solution->listeSoigneurs;
         }
@@ -364,7 +377,7 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
         fprintf(fichier, "%u\n",nbSoigneurs);
 
         for (int i = 0; i < nbPatients; ++i) {
-            nbRdV=provided_compter_nb_Rdv_par_patient(p->id_pat,p);
+            int nbRdV=provided_compter_nb_Rdv_par_patient(p->id_pat,p);
             fprintf(fichier, "%u %u\n", p->id_pat,nbRdV);
 
             r=p->listeRendezVous;
@@ -391,7 +404,103 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
  */
 void menuPrincipal(void){
 //    printf("hello world\n");
-    return provided_menu();
+    // return provided_menu();
+
+    T_Ordonnancement* instance = NULL;
+
+    int choix = 0;
+    while (choix != 9) {
+        system("cls");
+        printf("1 Creer une instance a partir d un fichier\n");
+        printf("2 Afficher tous les patients et leurs rendez-vous\n");
+        printf("3 Afficher tous les soigneurs et leurs intervalles de temps disponibles\n");
+        printf("4 Afficher un rendez-vous en indiquant l identifiant du patient et le soigneur correspondant\n");
+        printf("5 Modifier un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
+        printf("6 Supprimer un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
+        printf("7 Ordonnancer\n");
+        printf("8 Exporter la solution d un ordonnancement\n");
+        printf("9 Quitter\n");
+
+        scanf("%d", &choix);
+        fflush(stdin);
+
+        switch(choix) {
+            case 1:
+                printf("Entrez le chemin vers le fichier: ");
+                char chemin[256];
+                scanf("%s", chemin);
+
+                instance = creerInstance(chemin);
+                break;
+
+            case 2:
+                if (instance != NULL) {
+                    affichage_Patients(instance->listePatients);
+                } else {
+                    printf("Aucune instance n a ete chargee.");
+                }
+                break;
+
+            case 3:
+                if (instance != NULL) {
+                    affichage_Patients(instance->listeSoigneurs);
+                } else {
+                    printf("Aucune instance n a ete chargee.");
+                }
+                break;
+
+            case 4:
+                if (instance != NULL) {
+                    affichage_Patients(instance->listeSoigneurs);
+                } else {
+                    printf("Aucune instance n a ete chargee.");
+                }
+                break;
+
+            case 5:
+                if (instance != NULL) {
+                    affichage_Patients(instance->listeSoigneurs);
+                } else {
+                    printf("Aucune instance n a ete chargee.");
+                }
+                break;
+
+            case 6:
+                if (instance != NULL) {
+                    affichage_Patients(instance->listeSoigneurs);
+                } else {
+                    printf("Aucune instance n a ete chargee.");
+                }
+                break;
+
+            case 7:
+                if (instance != NULL) {
+                    ordonnancer(instance);
+                } else {
+                    printf("Aucune instance n a ete chargee.");
+                }
+                break;
+
+            case 8:
+                if (instance != NULL) {
+                    exportSolution(instance);
+                } else {
+                    printf("Aucune instance n a ete chargee.");
+                }
+                break;
+
+            case 9:
+
+                printf("Fermeture du programme");
+                break;
+
+            default:
+                printf("Cette commande n'est pas valide, veuillez entrer un des chiffres demandes");
+        }
+
+        printf("\n\n");
+        system("pause");
+    }
 }
 
 Time provided_sommeDeDurationRendezVous(T_Patient* patient){
@@ -447,6 +556,7 @@ void provided_FrontBackSplit(T_Patient * source, T_Patient ** frontRef, T_Patien
     *backRef = slow->suivant;
     slow->suivant = NULL;
 }
+
 void provided_MergeSort(T_Patient ** headRef){
     T_Patient* head = *headRef;
     T_Patient* a;
