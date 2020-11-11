@@ -249,15 +249,10 @@ T_Ordonnancement* creerInstance(char* filename){
 
         for (int j = 0; j < nbRdV; ++j) {
             fscanf(fptr, "%u", &idSoi);
-            printf("Id %d/", idSoi);
             fscanf(fptr, "%u", &dateDebutSouhaitee);
-            printf("Start %d/", dateDebutSouhaitee);
             fscanf(fptr, "%u", &dateFinSouhaitee);
-            printf("End %d/", dateFinSouhaitee);
             fscanf(fptr, "%u", &tempsDeplacement);
-            printf("Travel %d/", tempsDeplacement);
             fscanf(fptr, "%s", desc);
-            printf("Description %s\n", desc);
 
             printf("  Read appointment with doctor %d (%s): starting %d, ending %d, with %d minutes of travel\n", idSoi, desc, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement);
             o->listePatients->listeRendezVous = ajouterRendezVous(o->listePatients->listeRendezVous, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement, desc);
@@ -291,7 +286,7 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
 
     T_Intervalle* intervalle = soigneur->listeIntervalle;
     while (intervalle != NULL) {
-        if (intervalle->fin > rdv->debut_affectee || intervalle->debut > rdv->fin_affectee) {
+        if (intervalle->fin > rdv->debut_affectee || intervalle->debut < rdv->fin_affectee) {
             rdv->debut_affectee = intervalle->fin + rdv->temps_deplacement;
         }
         intervalle = intervalle->suivant;
@@ -361,7 +356,8 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
 
     char dateCourante[256];
     strftime(dateCourante, sizeof(dateCourante), "%Y-%m-%d", localtime(&timestamp));
-    char nomFichier[256]="solution.txt.";
+    char* nomFichier = malloc(sizeof(char*)*256);
+    strcpy(nomFichier,filename);
     strcat(nomFichier,dateCourante);
     strcat(nomFichier,".txt");
     filename=nomFichier;
@@ -483,7 +479,7 @@ void menuPrincipal(void){
 
             case 8:
                 if (instance != NULL) {
-                    exportSolution(instance);
+                    exportSolution(instance, "solution");
                 } else {
                     printf("Aucune instance n a ete chargee.");
                 }
