@@ -478,4 +478,36 @@ void exportSolution(T_Ordonnancement* solution, char* filename);
  * @brief menu principal du programme.
  */
 void menuPrincipal(void);
+
+/**
+ * Fonction offerte
+ * @brief Calculer la somme de duration de tous les RdV.
+ * @param patient un pointeur qui pointe un patient.
+ * @return le temps total de RdV.
+ */
+Time provided_sommeDeDurationRendezVous(T_Patient* patient);
+
+/**
+ * Fonction offerte
+ * @brief Fusionner deux listes de chaînée de T_Patient
+ * @param a une liste de chaînée triée.
+ * @param b une autre liste de chaînée triée.
+ * @return une liste chaînée triée
+ */
+T_Patient * provided_SortedMerge(T_Patient * a, T_Patient * b);
+/**
+ * Fonction Offerte
+ * @brief Séparer la liste chaînée aux deux sous-listes chaînées.
+ * @param source la liste chaînée origiale
+ * @param frontRef un pointeur qui pointe la premier sous-liste chaînée.
+ * @param backRef un pointeur qui pointe la premier sous-liste chaînée.
+ */
+void provided_FrontBackSplit(T_Patient * source, T_Patient ** frontRef, T_Patient ** backRef);
+/**
+ * Fonction offerte
+ * @brief Trier une liste chaînée par l'algorithm tri fusionné.
+ * @param headRef un pointeur qui pointe la tête de la liste chaînée.
+ */
+void provided_MergeSort(T_Patient ** headRef);
+
 #endif //TP3_TP3_H
