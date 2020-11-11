@@ -300,13 +300,31 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
  */
 void ordonnancer(T_Ordonnancement* solution){
     //return provided_ordonnancer(solution);
-    provided_MergeSort(&(solution->listePatients));
 
+    //PARTIE 1
+    provided_MergeSort(&(solution->listePatients)); //On utilise la fonction mergeSort offerte
 
+    //PARTIE 2
+    T_Soigneur* s=solution->listeSoigneurs;
+    T_Patient* p=solution->listePatients;
+    T_RendezVous* r;
 
-
-
-
+    while(p!=NULL) //On parcours tt les patients
+    {
+        r=p->listeRendezVous;
+        while(r!=NULL) //On parcours tt les rdv
+        {
+            while(s->id_soi!=r->id_soi) //On cherche le soigneur responsable du RDV
+            {
+                s=s->suivant;
+            }
+            affecterRdV(r,s);
+            
+            r=r->suivant;
+            s=solution->listeSoigneurs;
+        }
+        p=p->suivant;
+    }
 
 }
 /**
