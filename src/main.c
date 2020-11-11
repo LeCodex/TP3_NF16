@@ -5,7 +5,7 @@ int main() {
     //menuPrincipal();
 
     /*
-    //TEST DE AJOUTERSOIGNEUR
+//    TEST DE AJOUTERSOIGNEUR
     T_Soigneur* listeSoigneurs=NULL;
     listeSoigneurs=ajouterSoigneur(listeSoigneurs,1,"John","Doe");
     listeSoigneurs=ajouterSoigneur(listeSoigneurs,2,"Michel","Platini");
@@ -49,7 +49,10 @@ int main() {
     }
     */
 
-    creerInstance("./instance1.txt");
+    //TEST DE CREERINSTANCE
+//    T_Ordonnancement* o = creerInstance("./instance1.txt");
+//    affichage_Patients(o->listePatients);
+//    affichage_Soigneurs(o->listeSoigneurs);
 
     return 0;
 }
