@@ -318,49 +318,51 @@ void ordonnancer(T_Ordonnancement* solution){
  */
 void exportSolution(T_Ordonnancement* solution, char* filename){
     //return provided_exportSolution(solution, filename);
-//    T_Patient* p = malloc(sizeof(T_Patient));
-//    p=solution->listePatients;
-//
-//    T_RendezVous* r = malloc(sizeof(T_RendezVous));
-//
-//    FILE* fichier = NULL;
-//
-//    time_t timestamp;
-//    time(&timestamp);
-//
-//    char dateCourante[256];
-//    strftime(dateCourante, sizeof(dateCourante), "%Y-%m-%d", localtime(&timestamp));
-//    char nomFichier[256]="solution.txt.";
-//    strcat(nomFichier,dateCourante);
-//    strcat(nomFichier,".txt");
-//
-//    fichier = fopen(nomFichier, "w");
-//
-//    if (fichier != NULL)
-//    {
-//        unsigned int nbPatients=0, nbSoigneurs=0;
-//        nbPatients=provided_compter_nb_patients(solution->listePatients);
-//        nbSoigneurs=provided_compter_nb_soigneurs(solution->listeSoigneurs);
-//        fprintf(fichier, "%u ",nbPatients);
-//        fprintf(fichier, "%u\n",nbSoigneurs);
-//
-//        for (int i = 0; i < nbPatients; ++i) {
-//            fprintf(fichier, "%u %u\n", p->id_pat,provided_compter_nb_Rdv_par_patient(p->id_pat,p));
-//
-//            r=p->listeRendezVous;
-//            for (int j = 0; j < nbRdV; ++j) {
-//                fprintf(fichier, "%u %u %u %u\n", r->idSoi,r->dateDebutSouhaitee,r->dateFinSouhaitee,r->tempsDeplacement);
-//                r=r->suivant;
-//            }
-//            p=p->suivant;
-//        }
-//        fclose(fichier);
-//    }
-//    else
-//    {
-//
-//        printf("Impossible d'écrire dans le fichier %s",nomFichier);
-//    }
+    T_Patient* p = (T_Patient*)malloc(sizeof(T_Patient*));
+    p=solution->listePatients;
+
+    T_RendezVous* r = malloc(sizeof(T_RendezVous));
+
+    FILE* fichier = NULL;
+
+    time_t timestamp;
+    time(&timestamp);
+
+    char dateCourante[256];
+    strftime(dateCourante, sizeof(dateCourante), "%Y-%m-%d", localtime(&timestamp));
+    char nomFichier[256]="solution.txt.";
+    strcat(nomFichier,dateCourante);
+    strcat(nomFichier,".txt");
+    filename=nomFichier;
+
+    fichier = fopen(nomFichier, "w");
+
+    if (fichier != NULL)
+    {
+        unsigned int nbPatients=0, nbSoigneurs=0,nbRdV=0;
+        nbPatients=provided_compter_nb_patients(solution->listePatients);
+        nbSoigneurs=provided_compter_nb_soigneurs(solution->listeSoigneurs);
+        fprintf(fichier, "%u ",nbPatients);
+        fprintf(fichier, "%u\n",nbSoigneurs);
+
+        for (int i = 0; i < nbPatients; ++i) {
+            nbRdV=provided_compter_nb_Rdv_par_patient(p->id_pat,p);
+            fprintf(fichier, "%u %u\n", p->id_pat,nbRdV);
+
+            r=p->listeRendezVous;
+            for (int j = 0; j < nbRdV; ++j) {
+                fprintf(fichier, "%u %u %u %u\n", r->id_soi,r->debut_souhaitee,r->fin_souhaitee,r->temps_deplacement);
+                r=r->suivant;
+            }
+            p=p->suivant;
+        }
+        fclose(fichier);
+    }
+    else
+    {
+
+        printf("Impossible d'écrire dans le fichier %s",nomFichier);
+    }
 
     return ;
 
