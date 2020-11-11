@@ -356,8 +356,7 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
 
     char dateCourante[256];
     strftime(dateCourante, sizeof(dateCourante), "%Y-%m-%d", localtime(&timestamp));
-    char* nomFichier = malloc(sizeof(char*)*256);
-    strcpy(nomFichier,filename);
+    char* nomFichier = filename;
     strcat(nomFichier,dateCourante);
     strcat(nomFichier,".txt");
     filename=nomFichier;
