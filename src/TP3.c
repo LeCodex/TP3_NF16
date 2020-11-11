@@ -393,3 +393,78 @@ void menuPrincipal(void){
 //    printf("hello world\n");
     return provided_menu();
 }
+
+Time provided_sommeDeDurationRendezVous(T_Patient* patient){
+    T_RendezVous *header = patient->listeRendezVous;
+    Time temps = 0;
+    while(header!=NULL){
+        temps += header->fin_souhaitee - header->debut_souhaitee;
+        header = header->suivant;
+    }
+    return temps;
+}
+
+
+T_Patient * provided_SortedMerge(T_Patient * a, T_Patient * b){
+    T_Patient * result = NULL;
+
+    // condition d'arrêt
+    if (a == NULL)
+        return (b);
+    else if (b == NULL)
+        return (a);
+
+    // choisir un ou autre.
+
+    if (provided_sommeDeDurationRendezVous(a)> provided_sommeDeDurationRendezVous(b)) {
+        result = a;
+        result->suivant = provided_SortedMerge(a->suivant, b);
+    }
+    else {
+        result = b;
+        result->suivant = provided_SortedMerge(a, b->suivant);
+    }
+    return (result);
+}
+
+void provided_FrontBackSplit(T_Patient * source, T_Patient ** frontRef, T_Patient ** backRef){
+    T_Patient* fast;
+    T_Patient* slow;
+    slow = source;
+    fast = source->suivant;
+
+    // Avancez "fast" de deux nœuds et avancez "slow" d'un nœud
+    while (fast != NULL) {
+        fast = fast->suivant;
+        if (fast != NULL) {
+            slow = slow->suivant;
+            fast = fast->suivant;
+        }
+    }
+
+    // "slow" est avant le milieu de la liste, alors divisez-le en deux à ce moment.
+    *frontRef = source;
+    *backRef = slow->suivant;
+    slow->suivant = NULL;
+}
+void provided_MergeSort(T_Patient ** headRef){
+    T_Patient* head = *headRef;
+    T_Patient* a;
+    T_Patient* b;
+
+    // condition d'arrêt: quand il n'y a qu'une seule élément ou il est vide.
+    if ((head == NULL) || (head->suivant == NULL)) {
+        return;
+    }
+
+    /* Split head into 'a' and 'b' sublists */
+    // separer la liste chaînée aux deux sous-listes.
+    provided_FrontBackSplit(head, &a, &b);
+
+    /* Recursively sort the sublists */
+    provided_MergeSort(&a);
+    provided_MergeSort(&b);
+
+    // fusionner les deux sous_lists.
+    *headRef = provided_SortedMerge(a, b);
+}
