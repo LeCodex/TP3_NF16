@@ -52,10 +52,8 @@ T_Patient* ajouterPatient(T_Patient* listePatients, Index_Patient idPat, char* n
     strcpy(nouvPatient->nom, nom);
     strcpy(nouvPatient->prenom, prenom);
     nouvPatient->listeRendezVous = NULL;
-    printf("set");
 
     nouvPatient->suivant=listePatients;
-    printf("insert");
     return  nouvPatient;
     //return provided_ajouterPatient(listePatients, idPat, nom, prenom);
 }
@@ -139,6 +137,7 @@ T_RendezVous* supprimerRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi){
     if (trouve) {
         T_RendezVous* aSupprimer = r->suivant;
         r->suivant = aSupprimer->suivant;
+        aSupprimer->suivant->temps_deplacement += aSupprimer->fin_souhaitee - aSupprimer->debut_souhaitee + aSupprimer->temps_deplacement;
         free(aSupprimer);
     }
 
@@ -207,11 +206,15 @@ void affichage_RendezVous(T_RendezVous *rendezVous){
         T_RendezVous* r=rendezVous;
         while(r!=NULL)
         {
-            printf("%s, id_soigneur_associe: %d, temps_deplacement_depuis_rdv_precedent:%d\n",r->desc,r->id_soi,r->temps_deplacement);
-            printf("\t rdv souhaite: [%d, %d[, rdv affecte: [%d, %d[\n\n",r->debut_souhaitee,r->fin_souhaitee,r->debut_affectee,r->fin_affectee);
+            affichage_un_RendezVous(r);
             r=r->suivant;
         }
     }
+}
+
+void affichage_un_RendezVous(T_RendezVous* r) {
+    printf("%s, id_soigneur_associe: %d, temps_deplacement_depuis_rdv_precedent:%d\n",r->desc,r->id_soi,r->temps_deplacement);
+    printf("\t rdv souhaite: [%d, %d[, rdv affecte: [%d, %d[\n\n",r->debut_souhaitee,r->fin_souhaitee,r->debut_affectee,r->fin_affectee);
 }
 
 /**
@@ -281,19 +284,30 @@ T_Ordonnancement* creerInstance(char* filename){
  * @param soigneur un soigneur.
  */
 void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
-    rdv->debut_affectee = rdv->debut_souhaitee;
-    rdv->fin_affectee = rdv->fin_souhaitee;
-
     T_Intervalle* intervalle = soigneur->listeIntervalle;
-    while (intervalle != NULL) {
-        if (intervalle->fin > rdv->debut_affectee || intervalle->debut < rdv->fin_affectee) {
-            rdv->debut_affectee = intervalle->fin + rdv->temps_deplacement;
-        }
+    T_Intervalle* precedent = NULL;
+    while (intervalle != NULL && intervalle->fin - intervalle->debut < rdv->fin_souhaitee - rdv->debut_souhaitee + rdv->temps_deplacement) {
+        precedent = intervalle;
         intervalle = intervalle->suivant;
     }
 
-    rdv->fin_affectee = rdv->debut_affectee - rdv->debut_souhaitee + rdv->fin_souhaitee;
+    rdv->debut_affectee = intervalle->debut + rdv->temps_deplacement;
+    rdv->fin_affectee = rdv->debut_affectee + rdv->fin_souhaitee - rdv->debut_souhaitee;
     rdv->id_soi = soigneur->id_soi;
+
+    intervalle->debut = rdv->fin_affectee;
+    if (intervalle->debut == intervalle->fin) {
+        precedent->suivant = intervalle->suivant;
+        free(intervalle);
+    }
+}
+
+int max(int a, int b) {
+    if (a >= b) {
+        return a;
+    } else {
+        return b;
+    }
 }
 
 /**
@@ -320,7 +334,7 @@ void ordonnancer(T_Ordonnancement* solution){
     while(p!=NULL) //On parcours tt les patients
     {
         r=p->listeRendezVous;
-        while(r!=NULL) //On parcours tt les rdv
+        while(r!=NULL) //On parcours tous les rdv
         {
             while(s->id_soi!=r->id_soi) //On cherche le soigneur responsable du RDV
             {
@@ -383,15 +397,48 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
             p=p->suivant;
         }
         fclose(fichier);
-    }
-    else
-    {
-
+    } else {
         printf("Impossible d'écrire dans le fichier %s",nomFichier);
     }
 
     return ;
 
+}
+
+T_Patient* demanderRecherchePatient(T_Ordonnancement* instance) {
+    unsigned int idPat;
+
+    printf("Entrez l'identifiant du patient: ");
+    scanf("%d", &idPat);
+
+    T_Patient* patient = instance->listePatients;
+    while (patient != NULL && patient->id_pat != idPat) {
+        patient = patient->suivant;
+    }
+
+    if (patient == NULL) {
+        printf("Aucun patient n'a été trouvé avec cet identifiant.");
+    }
+
+    return patient;
+}
+
+T_RendezVous* demanderRechercheRendezVous(T_Patient* patient) {
+    unsigned int idSoi;
+
+    printf("Entrez l'identifiant du soigneur: ");
+    scanf("%d %d", &idSoi);
+
+    T_RendezVous* rdv = patient->listeRendezVous;
+    while (rdv != NULL && rdv->id_soi != idSoi) {
+        rdv = rdv->suivant;
+    }
+
+    if (rdv == NULL) {
+        printf("Aucun rendez vous avec le soigneur avec cet identifiant n'a été trouvé.");
+    }
+
+    return rdv;
 }
 
 /**
@@ -409,7 +456,7 @@ void menuPrincipal(void){
         printf("1 Creer une instance a partir d un fichier\n");
         printf("2 Afficher tous les patients et leurs rendez-vous\n");
         printf("3 Afficher tous les soigneurs et leurs intervalles de temps disponibles\n");
-        printf("4 Afficher un rendez-vous en indiquant l identifiant du patient et le soigneur correspondant\n");
+        printf("4 Afficher un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
         printf("5 Modifier un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
         printf("6 Supprimer un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
         printf("7 Ordonnancer\n");
@@ -438,7 +485,7 @@ void menuPrincipal(void){
 
             case 3:
                 if (instance != NULL) {
-                    affichage_Patients(instance->listeSoigneurs);
+                    affichage_Soigneurs(instance->listeSoigneurs);
                 } else {
                     printf("Aucune instance n a ete chargee.");
                 }
@@ -446,7 +493,11 @@ void menuPrincipal(void){
 
             case 4:
                 if (instance != NULL) {
-                    affichage_Patients(instance->listeSoigneurs);
+                    T_Patient* patient = demanderRecherchePatient(instance);
+                    if (patient != NULL) {
+                        T_RendezVous* rdv = demanderRechercheRendezVous(patient);
+                        if (rdv != NULL) affichage_un_RendezVous(rdv);
+                    }
                 } else {
                     printf("Aucune instance n a ete chargee.");
                 }
@@ -454,7 +505,21 @@ void menuPrincipal(void){
 
             case 5:
                 if (instance != NULL) {
-                    affichage_Patients(instance->listeSoigneurs);
+                    T_Patient* patient = demanderRecherchePatient(instance);
+
+                    if (patient != NULL) {
+                        T_RendezVous* rdv = demanderRechercheRendezVous(patient);
+                        if (rdv != NULL) {
+                            Time dateDebutSou, dateFinSou, tempsDeplacement;
+                            char desc[125];
+                            printf("Entrez la nouvelle date de debut, date de fin, temps de deplacement, et description: ");
+                            scanf("%d %d %d %s", &dateDebutSou, &dateFinSou, &tempsDeplacement, desc);
+
+                            modifierRendezVous(patient->listeRendezVous, rdv->id_soi, dateDebutSou, dateFinSou, tempsDeplacement, desc);
+                            printf("Rendez vous modifie:\n");
+                            affichage_un_RendezVous(rdv);
+                        }
+                    }
                 } else {
                     printf("Aucune instance n a ete chargee.");
                 }
@@ -462,7 +527,15 @@ void menuPrincipal(void){
 
             case 6:
                 if (instance != NULL) {
-                    affichage_Patients(instance->listeSoigneurs);
+                    T_Patient* patient = demanderRecherchePatient(instance);
+
+                    if (patient != NULL) {
+                        T_RendezVous* rdv = demanderRechercheRendezVous(patient);
+                        if (rdv != NULL) {
+                            supprimerRendezVous(patient->listeRendezVous, rdv->id_soi);
+                            printf("Rendez-vous supprime.");
+                        }
+                    }
                 } else {
                     printf("Aucune instance n a ete chargee.");
                 }
@@ -471,6 +544,7 @@ void menuPrincipal(void){
             case 7:
                 if (instance != NULL) {
                     ordonnancer(instance);
+                    printf("Instance ordonnancee.");
                 } else {
                     printf("Aucune instance n a ete chargee.");
                 }
@@ -479,6 +553,7 @@ void menuPrincipal(void){
             case 8:
                 if (instance != NULL) {
                     exportSolution(instance, "solution");
+                    printf("Instance exportee.");
                 } else {
                     printf("Aucune instance n a ete chargee.");
                 }
