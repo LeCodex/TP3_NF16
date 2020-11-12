@@ -231,7 +231,7 @@ T_Ordonnancement* creerInstance(char* filename){
 
     if (fptr == NULL) {
         printf("Erreur dans l'ouverture du fichier");
-        return;
+        return NULL;
     }
 
     unsigned int nbPatients = 0, nbSoigneurs = 0;
@@ -307,9 +307,9 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
                 rdv->fin_affectee = rdv->debut_affectee + rdv->fin_souhaitee - rdv->debut_souhaitee;
             }
         }
-        printf("%d\n", rdv->debut_affectee);
+//        printf("%d\n", rdv->debut_affectee);
     }
-    printf("Found\n\n");
+//    printf("Found\n\n");
 
     if (intervalle != NULL) {
         rdv->fin_affectee = rdv->debut_affectee + rdv->fin_souhaitee - rdv->debut_souhaitee;
@@ -416,7 +416,7 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
         printf("[Writing patients]\n");
         T_Patient* p = solution->listePatients;
         for (int i = 0; i < nbPatients; ++i) {
-            int nbRdV=provided_compter_nb_Rdv_par_patient(p->id_pat,p);
+            nbRdV=provided_compter_nb_Rdv_par_patient(p->id_pat,p);
             fprintf(fichier, "%u %u\n", p->id_pat,nbRdV);
             printf("Wrote patient %d with %d appointments\n", p->id_pat, nbRdV);
 
