@@ -82,6 +82,7 @@ T_RendezVous* ajouterRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Ti
     nouvRendezVous->suivant=listeRdV;
     return  nouvRendezVous;
 }
+
 /**
  * @brief Modification d’ un rendez-vous médical pour un patient par une date, le temps de déplacement ou une description nouvelle :
  * @param listeRdV une liste de Rendezvous laquelle ne doit pas être vide.
@@ -230,13 +231,13 @@ T_Ordonnancement* creerInstance(char* filename){
 
     if (fptr == NULL) {
         printf("Erreur dans l'ouverture du fichier");
-        exit(1);
+        return;
     }
 
     unsigned int nbPatients = 0, nbSoigneurs = 0;
     fscanf(fptr, "%u", &nbPatients);
     fscanf(fptr, "%u", &nbSoigneurs);
-    printf("Read patients and doctors amount: %d, %d\n\n", nbPatients, nbSoigneurs);
+    printf("Read patients and therapists amount: %d, %d\n\n", nbPatients, nbSoigneurs);
 
     unsigned int idPat, nbRdV, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement;
     char* nom = malloc(sizeof(char)*40);
@@ -259,20 +260,20 @@ T_Ordonnancement* creerInstance(char* filename){
             fscanf(fptr, "%u", &tempsDeplacement);
             fscanf(fptr, "%s", desc);
 
-            printf("\tRead appointment with doctor %d (%s): starting %d, ending %d, with %d minutes of travel\n", idSoi, desc, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement);
+            printf("\tRead appointment with therapist %d (%s): starting %d, ending %d, with %d minutes of travel\n", idSoi, desc, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement);
             o->listePatients->listeRendezVous = ajouterRendezVous(o->listePatients->listeRendezVous, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement, desc);
         }
         printf("\n");
     }
 
-    printf("\n[Reading doctors info]\n");
+    printf("\n[Reading therapists info]\n");
     for (int i = 0; i < nbSoigneurs; ++i) {
         fscanf(fptr, "%u", &idSoi);
         fscanf(fptr, "%s", nom);
         fscanf(fptr, "%s", prenom);
 
         o->listeSoigneurs = ajouterSoigneur(o->listeSoigneurs, idSoi, nom, prenom);
-        printf("Read doctor %d, named %s %s\n", idSoi, nom, prenom);
+        printf("Read therapist %d, named %s %s\n", idSoi, nom, prenom);
     }
 
     fclose(fptr);
@@ -288,22 +289,55 @@ T_Ordonnancement* creerInstance(char* filename){
 void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
     T_Intervalle* intervalle = soigneur->listeIntervalle;
     T_Intervalle* precedent = NULL;
+
+    rdv->debut_affectee = rdv->debut_souhaitee;
+    rdv->fin_affectee = rdv->fin_souhaitee;
     while (
         intervalle != NULL
-        && intervalle->fin - intervalle->debut < rdv->fin_souhaitee - rdv->debut_souhaitee
-    ) {
+        && (rdv->debut_affectee < intervalle->debut
+        || rdv->fin_affectee > intervalle->fin)
+    )
+    {
         precedent = intervalle;
         intervalle = intervalle->suivant;
+
+        if (intervalle != NULL) {
+            if (rdv->debut_affectee < intervalle->debut) {
+                rdv->debut_affectee = intervalle->debut + rdv->temps_deplacement;
+                rdv->fin_affectee = rdv->debut_affectee + rdv->fin_souhaitee - rdv->debut_souhaitee;
+            }
+        }
+        printf("%d\n", rdv->debut_affectee);
     }
+    printf("Found\n\n");
 
-    rdv->debut_affectee = intervalle->debut + rdv->temps_deplacement;
-    rdv->fin_affectee = rdv->debut_affectee + rdv->fin_souhaitee - rdv->debut_souhaitee;
-    rdv->id_soi = soigneur->id_soi;
+    if (intervalle != NULL) {
+        rdv->fin_affectee = rdv->debut_affectee + rdv->fin_souhaitee - rdv->debut_souhaitee;
+        rdv->id_soi = soigneur->id_soi;
 
-    intervalle->debut = rdv->fin_affectee;
-    if (intervalle->debut == intervalle->fin) {
-        precedent->suivant = intervalle->suivant;
-        free(intervalle);
+        if (intervalle->debut < rdv->debut_affectee) {
+            T_Intervalle* nouvIntervalle = malloc(sizeof(T_Intervalle));
+
+            nouvIntervalle->debut = intervalle->debut;
+            nouvIntervalle->fin = rdv->debut_affectee;
+
+            nouvIntervalle->suivant = intervalle;
+            if (precedent != NULL) {
+                precedent->suivant = nouvIntervalle;
+            } else {
+                soigneur->listeIntervalle = nouvIntervalle;
+            }
+            precedent = nouvIntervalle;
+        }
+
+        intervalle->debut = rdv->fin_affectee;
+        if (intervalle->debut == intervalle->fin) {
+            precedent->suivant = intervalle->suivant;
+            free(intervalle);
+        }
+    } else {
+        printf("Aucun intervalle de temps valide trouve pour ce rendez vous:\n");
+        affichage_un_RendezVous(rdv);
     }
 }
 
@@ -377,7 +411,7 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
         nbSoigneurs=provided_compter_nb_soigneurs(solution->listeSoigneurs);
         fprintf(fichier, "%u ",nbPatients);
         fprintf(fichier, "%u\n",nbSoigneurs);
-        printf("Wrote %d patients and %d doctors\n\n", nbPatients, nbSoigneurs);
+        printf("Wrote %d patients and %d therapists\n\n", nbPatients, nbSoigneurs);
 
         printf("[Writing patients]\n");
         T_Patient* p = solution->listePatients;
@@ -388,8 +422,8 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
 
             T_RendezVous* r =p->listeRendezVous;
             for (int j = 0; j < nbRdV; ++j) {
-                fprintf(fichier, "%u %u %u %u\n", r->id_soi,r->debut_souhaitee,r->fin_souhaitee,r->temps_deplacement);
-                printf("\tWrote appointment with doctor %d: starting %d, ending %d, %d travel time\n", r->id_soi,r->debut_souhaitee,r->fin_souhaitee,r->temps_deplacement);
+                fprintf(fichier, "%u %u %u %u\n", r->id_soi,r->debut_affectee,r->fin_affectee,r->temps_deplacement);
+                printf("\tWrote appointment with therapist %d: starting %d, ending %d, %d travel time\n", r->id_soi,r->debut_affectee,r->fin_affectee,r->temps_deplacement);
                 r=r->suivant;
             }
             p=p->suivant;
@@ -400,7 +434,6 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
     }
 
     return ;
-
 }
 
 T_Patient* demanderRecherchePatient(T_Ordonnancement* instance) {
