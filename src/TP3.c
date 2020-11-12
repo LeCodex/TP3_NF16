@@ -18,15 +18,15 @@ Date: 12/10/2020
  * @param prenom le prénom d'un soigneur.
  */
 T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, char* nom, char* prenom){
-    T_Soigneur *nouvSoigneur=malloc(sizeof(T_Soigneur*));
-    T_Intervalle *listeIntervalle=malloc(sizeof(T_Intervalle*));
+    T_Soigneur *nouvSoigneur=malloc(sizeof(T_Soigneur));
+    T_Intervalle *listeIntervalle=malloc(sizeof(T_Intervalle));
     listeIntervalle->debut = 0;
     listeIntervalle->fin = 32767;
     listeIntervalle->suivant = NULL;
 
     nouvSoigneur->id_soi=idSoi;
-    nouvSoigneur->nom = malloc(sizeof(char*)*40);
-    nouvSoigneur->prenom = malloc(sizeof(char*)*40);
+    nouvSoigneur->nom = malloc(sizeof(char)*40);
+    nouvSoigneur->prenom = malloc(sizeof(char)*40);
     strcpy(nouvSoigneur->nom, nom);
     strcpy(nouvSoigneur->prenom, prenom);
     nouvSoigneur->listeIntervalle=listeIntervalle;
@@ -44,11 +44,11 @@ T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, ch
  * @param prenom le prénom d'un patient.
  */
 T_Patient* ajouterPatient(T_Patient* listePatients, Index_Patient idPat, char* nom, char* prenom){
-    T_Patient *nouvPatient=malloc(sizeof(T_Patient*));
+    T_Patient *nouvPatient=malloc(sizeof(T_Patient));
 
     nouvPatient->id_pat=idPat;
-    nouvPatient->nom = malloc(sizeof(char*)*40);
-    nouvPatient->prenom = malloc(sizeof(char*)*40);
+    nouvPatient->nom = malloc(sizeof(char)*40);
+    nouvPatient->prenom = malloc(sizeof(char)*40);
     strcpy(nouvPatient->nom, nom);
     strcpy(nouvPatient->prenom, prenom);
     nouvPatient->listeRendezVous = NULL;
@@ -68,7 +68,7 @@ T_Patient* ajouterPatient(T_Patient* listePatients, Index_Patient idPat, char* n
  */
 T_RendezVous* ajouterRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Time dateDebutSouhaitee, Time dateFinSouhaitee, Time tempsDeplacement, char* desc){
     //return provided_ajouterRendezVous(listeRdV, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement, desc);
-    T_RendezVous* nouvRendezVous=malloc(sizeof(T_RendezVous*));
+    T_RendezVous* nouvRendezVous=malloc(sizeof(T_RendezVous));
 
     nouvRendezVous->id_soi=idSoi;
     nouvRendezVous->debut_souhaitee=dateDebutSouhaitee;
@@ -76,7 +76,7 @@ T_RendezVous* ajouterRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi, Ti
     nouvRendezVous->debut_affectee=0;
     nouvRendezVous->fin_affectee=0;
     nouvRendezVous->temps_deplacement=tempsDeplacement;
-    nouvRendezVous->desc = malloc(sizeof(char*)*125);
+    nouvRendezVous->desc = malloc(sizeof(char)*125);
     strcpy(nouvRendezVous->desc, desc);
 
     nouvRendezVous->suivant=listeRdV;
@@ -137,7 +137,7 @@ T_RendezVous* supprimerRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi){
     if (trouve) {
         T_RendezVous* aSupprimer = r->suivant;
         r->suivant = aSupprimer->suivant;
-        aSupprimer->suivant->temps_deplacement += aSupprimer->fin_souhaitee - aSupprimer->debut_souhaitee + aSupprimer->temps_deplacement;
+        r->temps_deplacement += aSupprimer->fin_souhaitee - aSupprimer->debut_souhaitee + aSupprimer->temps_deplacement;
         free(aSupprimer);
     }
 
@@ -214,7 +214,7 @@ void affichage_RendezVous(T_RendezVous *rendezVous){
 
 void affichage_un_RendezVous(T_RendezVous* r) {
     printf("%s, id_soigneur_associe: %d, temps_deplacement_depuis_rdv_precedent:%d\n",r->desc,r->id_soi,r->temps_deplacement);
-    printf("\t rdv souhaite: [%d, %d[, rdv affecte: [%d, %d[\n\n",r->debut_souhaitee,r->fin_souhaitee,r->debut_affectee,r->fin_affectee);
+    printf("\trdv souhaite: [%d, %d[, rdv affecte: [%d, %d[\n\n",r->debut_souhaitee,r->fin_souhaitee,r->debut_affectee,r->fin_affectee);
 }
 
 /**
@@ -224,7 +224,9 @@ void affichage_un_RendezVous(T_RendezVous* r) {
  */
 T_Ordonnancement* creerInstance(char* filename){
     FILE* fptr = fopen(filename, "r");
-    T_Ordonnancement* o = malloc(sizeof(T_Ordonnancement*));
+    T_Ordonnancement* o = malloc(sizeof(T_Ordonnancement));
+    o->listePatients = NULL;
+    o->listeSoigneurs = NULL;
 
     if (fptr == NULL) {
         printf("Erreur dans l'ouverture du fichier");
@@ -237,9 +239,9 @@ T_Ordonnancement* creerInstance(char* filename){
     printf("Read patients and doctors amount: %d, %d\n\n", nbPatients, nbSoigneurs);
 
     unsigned int idPat, nbRdV, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement;
-    char* nom = malloc(sizeof(char*)*40);
-    char* prenom = malloc(sizeof(char*)*40);
-    char* desc = malloc(sizeof(char*)*125);
+    char* nom = malloc(sizeof(char)*40);
+    char* prenom = malloc(sizeof(char)*40);
+    char* desc = malloc(sizeof(char)*125);
     printf("[Reading patients info]\n");
     for (int i = 0; i < nbPatients; ++i) {
         fscanf(fptr, "%u", &idPat);
@@ -257,7 +259,7 @@ T_Ordonnancement* creerInstance(char* filename){
             fscanf(fptr, "%u", &tempsDeplacement);
             fscanf(fptr, "%s", desc);
 
-            printf("  Read appointment with doctor %d (%s): starting %d, ending %d, with %d minutes of travel\n", idSoi, desc, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement);
+            printf("\tRead appointment with doctor %d (%s): starting %d, ending %d, with %d minutes of travel\n", idSoi, desc, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement);
             o->listePatients->listeRendezVous = ajouterRendezVous(o->listePatients->listeRendezVous, idSoi, dateDebutSouhaitee, dateFinSouhaitee, tempsDeplacement, desc);
         }
         printf("\n");
@@ -286,7 +288,10 @@ T_Ordonnancement* creerInstance(char* filename){
 void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
     T_Intervalle* intervalle = soigneur->listeIntervalle;
     T_Intervalle* precedent = NULL;
-    while (intervalle != NULL && intervalle->fin - intervalle->debut < rdv->fin_souhaitee - rdv->debut_souhaitee + rdv->temps_deplacement) {
+    while (
+        intervalle != NULL
+        && intervalle->fin - intervalle->debut < rdv->fin_souhaitee - rdv->debut_souhaitee
+    ) {
         precedent = intervalle;
         intervalle = intervalle->suivant;
     }
@@ -299,14 +304,6 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
     if (intervalle->debut == intervalle->fin) {
         precedent->suivant = intervalle->suivant;
         free(intervalle);
-    }
-}
-
-int max(int a, int b) {
-    if (a >= b) {
-        return a;
-    } else {
-        return b;
     }
 }
 
@@ -358,40 +355,41 @@ void ordonnancer(T_Ordonnancement* solution){
  */
 void exportSolution(T_Ordonnancement* solution, char* filename){
     //return provided_exportSolution(solution, filename);
-    T_Patient* p = (T_Patient*)malloc(sizeof(T_Patient*));
-    p=solution->listePatients;
-
-    T_RendezVous* r = malloc(sizeof(T_RendezVous));
-
-    FILE* fichier = NULL;
-
+    printf("Getting timestamp\n");
     time_t timestamp;
     time(&timestamp);
 
-    char dateCourante[256];
-    strftime(dateCourante, sizeof(dateCourante), "%Y-%m-%d", localtime(&timestamp));
-    char* nomFichier = filename;
+    printf("Getting filename\n");
+    char dateCourante[256], nomFichier[256];
+    strftime(dateCourante, 256, ".%Y-%m-%d.txt", localtime(&timestamp));
+    printf("Got formatted timestamp as %s, trying to concat it with %s\n", dateCourante, filename);
+    strcpy(nomFichier,filename);
     strcat(nomFichier,dateCourante);
-    strcat(nomFichier,".txt");
-    filename=nomFichier;
 
-    fichier = fopen(nomFichier, "w");
+    printf("Opening file %s...\n", nomFichier);
+    FILE* fichier = fopen(nomFichier, "w");
 
     if (fichier != NULL)
     {
+        printf("File opened\n");
         unsigned int nbPatients=0, nbSoigneurs=0,nbRdV=0;
         nbPatients=provided_compter_nb_patients(solution->listePatients);
         nbSoigneurs=provided_compter_nb_soigneurs(solution->listeSoigneurs);
         fprintf(fichier, "%u ",nbPatients);
         fprintf(fichier, "%u\n",nbSoigneurs);
+        printf("Wrote %d patients and %d doctors\n\n", nbPatients, nbSoigneurs);
 
+        printf("[Writing patients]\n");
+        T_Patient* p = solution->listePatients;
         for (int i = 0; i < nbPatients; ++i) {
             int nbRdV=provided_compter_nb_Rdv_par_patient(p->id_pat,p);
             fprintf(fichier, "%u %u\n", p->id_pat,nbRdV);
+            printf("Wrote patient %d with %d appointments\n", p->id_pat, nbRdV);
 
-            r=p->listeRendezVous;
+            T_RendezVous* r =p->listeRendezVous;
             for (int j = 0; j < nbRdV; ++j) {
                 fprintf(fichier, "%u %u %u %u\n", r->id_soi,r->debut_souhaitee,r->fin_souhaitee,r->temps_deplacement);
+                printf("\tWrote appointment with doctor %d: starting %d, ending %d, %d travel time\n", r->id_soi,r->debut_souhaitee,r->fin_souhaitee,r->temps_deplacement);
                 r=r->suivant;
             }
             p=p->suivant;
@@ -427,7 +425,7 @@ T_RendezVous* demanderRechercheRendezVous(T_Patient* patient) {
     unsigned int idSoi;
 
     printf("Entrez l'identifiant du soigneur: ");
-    scanf("%d %d", &idSoi);
+    scanf("%d", &idSoi);
 
     T_RendezVous* rdv = patient->listeRendezVous;
     while (rdv != NULL && rdv->id_soi != idSoi) {
@@ -435,7 +433,7 @@ T_RendezVous* demanderRechercheRendezVous(T_Patient* patient) {
     }
 
     if (rdv == NULL) {
-        printf("Aucun rendez vous avec le soigneur avec cet identifiant n'a été trouvé.");
+        printf("Aucun rendez vous avec le soigneur avec cet identifiant n'a ete trouvé.");
     }
 
     return rdv;
@@ -560,7 +558,7 @@ void menuPrincipal(void){
                 break;
 
             case 9:
-
+                provided_liberer_resource(instance);
                 printf("Fermeture du programme");
                 break;
 
