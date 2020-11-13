@@ -308,14 +308,14 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
             }
         }
 //        printf("%d\n", rdv->debut_affectee);
-    }
+    } // Chercher un intervalle où le rendez vous rentre
 //    printf("Found\n\n");
 
     if (intervalle != NULL) {
         rdv->fin_affectee = rdv->debut_affectee + rdv->fin_souhaitee - rdv->debut_souhaitee;
         rdv->id_soi = soigneur->id_soi;
 
-        if (intervalle->debut < rdv->debut_affectee) {
+        if (intervalle->debut < rdv->debut_affectee) { // Créer un intervalle avant le rendez vous
             T_Intervalle* nouvIntervalle = malloc(sizeof(T_Intervalle));
 
             nouvIntervalle->debut = intervalle->debut;
@@ -330,7 +330,7 @@ void affecterRdV(T_RendezVous* rdv, T_Soigneur* soigneur){
             precedent = nouvIntervalle;
         }
 
-        intervalle->debut = rdv->fin_affectee;
+        intervalle->debut = rdv->fin_affectee; //Modifier l'intervalle pour qu'il ne reste que le temps après le rendez vous
         if (intervalle->debut == intervalle->fin) {
             precedent->suivant = intervalle->suivant;
             free(intervalle);
@@ -583,7 +583,10 @@ void menuPrincipal(void){
 
             case 8:
                 if (instance != NULL) {
-                    exportSolution(instance, "solution");
+                    printf("Entrez le nom du fichier: ");
+                    char nom[256];
+                    scanf("%s", nom);
+                    exportSolution(instance, nom);
                     printf("Instance exportee.");
                 } else {
                     printf("Aucune instance n a ete chargee.");
