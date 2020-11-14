@@ -7,7 +7,9 @@ Date: 12/10/2020
 #include "../include/TP3.h"
 #include <stdlib.h>
 #include <time.h>
-#include<string.h>
+#include <string.h>
+#include <math.h>
+#include <limits.h>
 
 /**
  * @brief Ajout d’un soigneur, où la liste des intervalles de temps disponibles pour un nouveau soigneur
@@ -21,7 +23,7 @@ T_Soigneur* ajouterSoigneur(T_Soigneur* listeSoigneurs, Index_Soigneur idSoi, ch
     T_Soigneur *nouvSoigneur=malloc(sizeof(T_Soigneur));
     T_Intervalle *listeIntervalle=malloc(sizeof(T_Intervalle));
     listeIntervalle->debut = 0;
-    listeIntervalle->fin = 32767;
+    listeIntervalle->fin = INT_MAX;
     listeIntervalle->suivant = NULL;
 
     nouvSoigneur->id_soi=idSoi;
@@ -138,7 +140,7 @@ T_RendezVous* supprimerRendezVous(T_RendezVous* listeRdV, Index_Soigneur idSoi){
     if (trouve) {
         T_RendezVous* aSupprimer = r->suivant;
         r->suivant = aSupprimer->suivant;
-        r->temps_deplacement += aSupprimer->fin_souhaitee - aSupprimer->debut_souhaitee + aSupprimer->temps_deplacement;
+        r->temps_deplacement = sqrt(pow(r->temps_deplacement, 2)+pow(aSupprimer->temps_deplacement, 2));
         free(aSupprimer);
     }
 
@@ -407,8 +409,8 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
     {
         printf("File opened\n");
         unsigned int nbPatients=0, nbSoigneurs=0,nbRdV=0;
-        nbPatients=provided_compter_nb_patients(solution->listePatients);
-        nbSoigneurs=provided_compter_nb_soigneurs(solution->listeSoigneurs);
+        nbPatients=compter_nb_patients(solution->listePatients);
+        nbSoigneurs=compter_nb_soigneurs(solution->listeSoigneurs);
         fprintf(fichier, "%u ",nbPatients);
         fprintf(fichier, "%u\n",nbSoigneurs);
         printf("Wrote %d patients and %d therapists\n\n", nbPatients, nbSoigneurs);
@@ -416,7 +418,7 @@ void exportSolution(T_Ordonnancement* solution, char* filename){
         printf("[Writing patients]\n");
         T_Patient* p = solution->listePatients;
         for (int i = 0; i < nbPatients; ++i) {
-            nbRdV=provided_compter_nb_Rdv_par_patient(p->id_pat,p);
+            nbRdV=compter_nb_RdV(p->listeRendezVous);
             fprintf(fichier, "%u %u\n", p->id_pat,nbRdV);
             printf("Wrote patient %d with %d appointments\n", p->id_pat, nbRdV);
 
@@ -487,11 +489,11 @@ void menuPrincipal(void){
         printf("1 Creer une instance a partir d un fichier\n");
         printf("2 Afficher tous les patients et leurs rendez-vous\n");
         printf("3 Afficher tous les soigneurs et leurs intervalles de temps disponibles\n");
-        printf("4 Afficher un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
-        printf("5 Modifier un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
-        printf("6 Supprimer un rendez-vous en indiquant l identifiant du patient et celui du soigneur correspondant\n");
-        printf("7 Ordonnancer\n");
-        printf("8 Exporter la solution d un ordonnancement\n");
+        printf("4 Afficher un rendez-vous\n");
+        printf("5 Modifier un rendez-vous\n");
+        printf("6 Supprimer un rendez-vous\n");
+        printf("7 Ordonnancer l'instance\n");
+        printf("8 Exporter la solution\n");
         printf("9 Quitter\n");
 
         scanf("%d", &choix);
@@ -594,7 +596,7 @@ void menuPrincipal(void){
                 break;
 
             case 9:
-                provided_liberer_resource(instance);
+                liberer_ressource(instance);
                 printf("Fermeture du programme");
                 break;
 
@@ -605,6 +607,65 @@ void menuPrincipal(void){
         printf("\n\n");
         system("pause");
     }
+}
+
+void liberer_ressource(T_Ordonnancement* instance) {
+    T_Patient* p = instance->listePatients;
+    while (p != NULL) {
+        T_RendezVous* r = p->listeRendezVous;
+        while (r != NULL) {
+            free(r);
+            r = r->suivant;
+        }
+        free(p);
+        p = p->suivant;
+    }
+
+    T_Soigneur* s = instance->listeSoigneurs;
+    while (s != NULL) {
+        T_Intervalle* i = s->listeIntervalle;
+        while (i != NULL) {
+            free(i);
+            i = i->suivant;
+        }
+        free(s);
+        s = s->suivant;
+    }
+
+    free(instance);
+}
+
+int compter_nb_patients(T_Patient* listePatients) {
+    int amount = 0;
+    T_Patient* p = listePatients;
+    while (p != NULL) {
+        amount++;
+        p = p->suivant;
+    }
+
+    return amount;
+}
+
+int compter_nb_soigneurs(T_Soigneur* listeSoigneurs) {
+    int amount = 0;
+    T_Soigneur* s = listeSoigneurs;
+    while (s != NULL) {
+        amount++;
+        s = s->suivant;
+    }
+
+    return amount;
+}
+
+int compter_nb_RdV(T_RendezVous* listeRendezVous) {
+    int amount = 0;
+    T_RendezVous* r = listeRendezVous;
+    while (r != NULL) {
+        amount++;
+        r = r->suivant;
+    }
+
+    return amount;
 }
 
 Time provided_sommeDeDurationRendezVous(T_Patient* patient){
